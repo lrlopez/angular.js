@@ -20,13 +20,10 @@ function $RouteProvider(){
    *
    * @param {string} path Route path (matched against `$location.path`). If `$location.path`
    *    contains redundant trailing slash or is missing one, the route will still match and the
-   *    `$location.path` will be updated to add or drop the trailing slash to exactly match the
-   *    route definition.
-   *
-   *    `path` can contain named groups starting with a colon (`:name`). All characters up to the
-   *    next slash are matched and stored in `$routeParams` under the given `name` when the route
-   *    matches.
-   *
+   *    `$location.path` will be updated to add or drop the trailing slash to exacly match the
+   *    route definition. A path can contain single parameters prefixed with a colon or catch-all
+   *    partials (multiple levels including slashes) if they are prefixed with an asterisk.
+   *    
    * @param {Object} route Mapping information to be assigned to `$route.current` on route
    *    match.
    *
@@ -339,28 +336,33 @@ function $RouteProvider(){
     function switchRouteMatcher(on, when) {
       // TODO(i): this code is convoluted and inefficient, we should construct the route matching
       //   regex only once and then reuse it
-
+      
       // Escape regexp special characters.
-      when = '^' + when.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&") + '$';
+      when = '^' + when.replace(/[-\/\\^$+?.()|[\]{}]/g, "\\$&") + '$';
       var regex = '',
           params = [],
           dst = {};
 
-      var re = /:(\w+)/g,
+      var re = /[:\*](\w+)/g,
           paramMatch,
           lastMatchedIndex = 0;
 
       while ((paramMatch = re.exec(when)) !== null) {
-        // Find each :param in `when` and replace it with a capturing group.
+        // Find each :param or *param in `when` and replace it with a capturing group.
         // Append all other sections of when unchanged.
         regex += when.slice(lastMatchedIndex, paramMatch.index);
-        regex += '([^\\/]*)';
+        if (paramMatch[0].charAt(0) == '*') {
+          regex += '(.*)';
+        }
+        else {
+          regex += '([^\\/]*)';
+        }
         params.push(paramMatch[1]);
         lastMatchedIndex = re.lastIndex;
       }
       // Append trailing path part.
       regex += when.substr(lastMatchedIndex);
-
+      
       var match = on.match(new RegExp(regex));
       if (match) {
         forEach(params, function(name, index) {

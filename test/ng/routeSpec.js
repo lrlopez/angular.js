@@ -59,6 +59,63 @@ describe('$route', function() {
     });
   });
 
+  it('should route and fire change event when catch-all params are used', function() {
+    var log = '',
+        lastRoute,
+        nextRoute;
+
+    module(function($routeProvider) {
+      $routeProvider.when('/Book1/:book/Chapter/:chapter/*highlight',
+          {controller: noop, templateUrl: 'Chapter.html'});
+      $routeProvider.when('/Book2/:book/*highlight/Chapter/:chapter',
+          {controller: noop, templateUrl: 'Chapter.html'});
+      $routeProvider.when('/Blank', {});
+    });
+    inject(function($route, $location, $rootScope) {
+      $rootScope.$on('$routeChangeStart', function(event, next, current) {
+        log += 'before();';
+        expect(current).toBe($route.current);
+        lastRoute = current;
+        nextRoute = next;
+      });
+      $rootScope.$on('$routeChangeSuccess', function(event, current, last) {
+        log += 'after();';
+        expect(current).toBe($route.current);
+        expect(lastRoute).toBe(last);
+        expect(nextRoute).toBe(current);
+      });
+
+      $location.path('/Book1/Moby/Chapter/Intro/one').search('p=123');
+      $rootScope.$digest();
+      $httpBackend.flush();
+      expect(log).toEqual('before();after();');
+      expect($route.current.params).toEqual({book:'Moby', chapter:'Intro', highlight:'one', p:'123'});
+
+      log = '';
+      $location.path('/Blank').search('ignore');
+      $rootScope.$digest();
+      expect(log).toEqual('before();after();');
+      expect($route.current.params).toEqual({ignore:true});
+
+      log = '';
+      $location.path('/Book1/Moby/Chapter/Intro/one/two').search('p=123');
+      $rootScope.$digest();
+      expect(log).toEqual('before();after();');
+      expect($route.current.params).toEqual({book:'Moby', chapter:'Intro', highlight:'one/two', p:'123'});
+
+      log = '';
+      $location.path('/Book2/Moby/one/two/Chapter/Intro').search('p=123');
+      $rootScope.$digest();
+      expect(log).toEqual('before();after();');
+      expect($route.current.params).toEqual({book:'Moby', chapter:'Intro', highlight:'one/two', p:'123'});
+
+      log = '';
+      $location.path('/NONE');
+      $rootScope.$digest();
+      expect(log).toEqual('before();after();');
+      expect($route.current).toEqual(null);
+    });
+  });
 
   it('should not change route when location is canceled', function() {
     module(function($routeProvider) {
@@ -84,7 +141,7 @@ describe('$route', function() {
 
   describe('should match a route that contains special chars in the path', function() {
     beforeEach(module(function($routeProvider) {
-      $routeProvider.when('/$test.23/foo*(bar)/:baz', {templateUrl: 'test.html'});
+      $routeProvider.when('/$test.23/foo(bar)/:baz', {templateUrl: 'test.html'});
     }));
 
     it('matches the full path', inject(function($route, $location, $rootScope) {
@@ -94,25 +151,19 @@ describe('$route', function() {
     }));
 
     it('matches literal .', inject(function($route, $location, $rootScope) {
-      $location.path('/$testX23/foo*(bar)/222');
-      $rootScope.$digest();
-      expect($route.current).toBeUndefined();
-    }));
-
-    it('matches literal *', inject(function($route, $location, $rootScope) {
-      $location.path('/$test.23/foooo(bar)/222');
+      $location.path('/$testX23/foo(bar)/222');
       $rootScope.$digest();
       expect($route.current).toBeUndefined();
     }));
 
     it('treats backslashes normally', inject(function($route, $location, $rootScope) {
-      $location.path('/$test.23/foo*\\(bar)/222');
+      $location.path('/$test.23/foo\\(bar)/222');
       $rootScope.$digest();
       expect($route.current).toBeUndefined();
     }));
 
     it('matches a URL with special chars', inject(function($route, $location, $rootScope) {
-      $location.path('/$test.23/foo*(bar)/222');
+      $location.path('/$test.23/foo(bar)/222');
       $rootScope.$digest();
       expect($route.current).toBeDefined();
     }));
