@@ -484,7 +484,8 @@ link() or compile() functions - is a way of accessing:
 
   * *normalized attribute names:* Since a directive such as 'ngBind' can be expressed in many ways
     such as 'ng:bind', or 'x-ng-bind', the attributes object allows for normalized accessed to
-    the attributes.
+    the attributes. Also, if the attribute is prefixed with 'ngAttr', 'ng-attr-', 'ng:attr:' or
+    'ng_attr_' the prefix will be removed once the attribute is evaluated, allowing late binding.
 
   * *directive inter-communication:* All directives share the same instance of the attributes
     object which allows the directives to use the attributes object as inter directive

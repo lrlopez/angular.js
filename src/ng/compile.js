@@ -156,7 +156,8 @@ function $CompileProvider($provide) {
       COMMENT_DIRECTIVE_REGEXP = /^\s*directive\:\s*([\d\w\-_]+)\s+(.*)$/,
       CLASS_DIRECTIVE_REGEXP = /(([\d\w\-_]+)(?:\:([^;]+))?;?)/,
       MULTI_ROOT_TEMPLATE_ERROR = 'Template must have exactly one root element. was: ',
-      urlSanitizationWhitelist = /^\s*(https?|ftp|mailto):/;
+      urlSanitizationWhitelist = /^\s*(https?|ftp|mailto):/,
+      NG_ATTR_DIRECTIVE_REGEXP = /^((x-|data-)?ng[-,:,_]?attr[-,:,_]?)(.+)/i;
 
 
   /**
@@ -519,6 +520,10 @@ function $CompileProvider($provide) {
             attr = nAttrs[j];
             if (attr.specified) {
               name = attr.name;
+              // support late binding attributes
+              if(NG_ATTR_DIRECTIVE_REGEXP.test(name)) {
+                name = NG_ATTR_DIRECTIVE_REGEXP.exec(name)[3]; 
+              }
               nName = directiveNormalize(name.toLowerCase());
               attrsMap[nName] = name;
               attrs[nName] = value = trim((msie && name == 'href')

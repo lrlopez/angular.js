@@ -2498,4 +2498,26 @@ describe('$compile', function() {
       });
     });
   });
+
+  describe('late binding attributes', function() {
+
+    it('should bind after digest but not before', inject(function($compile, $rootScope) {
+      $rootScope.name = "Misko";
+      element = $compile('<span ng-attr-test="{{name}}"></span>')($rootScope);
+      expect(element.attr('test')).toBeUndefined();
+      $rootScope.$digest();
+      expect(element.attr('test')).toBe('Misko');
+    }));
+
+    it('should work with different prefixes', inject(function($compile, $rootScope) {
+      $rootScope.name = "Misko";
+      element = $compile('<span ngAttrTest="{{name}}" ng:attr:test2="{{name}}"></span>')($rootScope);
+      expect(element.attr('test')).toBeUndefined();
+      expect(element.attr('test2')).toBeUndefined();
+      $rootScope.$digest();
+      expect(element.attr('test')).toBe('Misko');
+      expect(element.attr('test2')).toBe('Misko');
+    }));    
+  });
+
 });
