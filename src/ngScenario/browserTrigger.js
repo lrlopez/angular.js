@@ -62,7 +62,7 @@
     }
 
     if (msie < 9) {
-      if (inputType == 'radio' || inputType == 'checkbox') {
+      if ((inputType == 'radio' || inputType == 'checkbox') && (eventType == 'click')) {
           element.checked = !element.checked;
       }
 
