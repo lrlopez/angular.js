@@ -925,8 +925,7 @@ function textInputType(scope, element, attr, ctrl, updModOnCtrl, updModlTimCtrl,
     });
   }
 
-  var timeout = null,
-      eventList,
+  var eventList,
       updateTimeout,
       updateDefaultTimeout;
 
@@ -959,6 +958,7 @@ function textInputType(scope, element, attr, ctrl, updModOnCtrl, updModlTimCtrl,
         // again. This enables HTML5 constraint validation errors to affect Angular validation
         // even when the first character entered causes an error.
         (validity && value === '' && !validity.valueMissing)) {
+      ctrl.$timeout = null;
       if (scope.$$phase) {
         ctrl.$setViewValue(value);
       } else {
@@ -977,7 +977,8 @@ function textInputType(scope, element, attr, ctrl, updModOnCtrl, updModlTimCtrl,
             : updateDefaultTimeout || 0;
 
     if (callbackTimeout>0) {
-      timeout = $timeout(update, callbackTimeout, false, timeout);
+      ctrl.$pendingValue = element.val();
+      ctrl.$timeout = $timeout(update, callbackTimeout, false, ctrl.$timeout);
     }
     else {
       update();
@@ -1301,8 +1302,7 @@ function radioInputType(scope, element, attr, ctrl, updModOnCtrl, updModlTimCtrl
 }
 
 function checkboxInputType(scope, element, attr, ctrl, updModOnCtrl, updModlTimCtrl, $timeout) {
-  var timeout = null,
-      trueValue = attr.ngTrueValue,
+  var trueValue = attr.ngTrueValue,
       falseValue = attr.ngFalseValue,
       eventList,
       updateDefaultTimeout,
@@ -1322,6 +1322,7 @@ function checkboxInputType(scope, element, attr, ctrl, updModOnCtrl, updModlTimC
   }
 
   var update = function() {
+    ctrl.$timeout = null;
     scope.$apply(function() {
       ctrl.$setViewValue(element[0].checked);
     });
@@ -1338,7 +1339,8 @@ function checkboxInputType(scope, element, attr, ctrl, updModOnCtrl, updModlTimC
           : updateDefaultTimeout || 0;
 
     if (callbackTimeout>0) {
-      timeout = $timeout(update, callbackTimeout, false, timeout);
+      ctrl.$pendingValue = element[0].checked;
+      ctrl.$timeout = $timeout(update, callbackTimeout, false, ctrl.$timeout);
     }
     else {
       update();
@@ -1671,6 +1673,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
     function($scope, $exceptionHandler, $attr, $element, $parse, $animate) {
   this.$viewValue = Number.NaN;
   this.$modelValue = Number.NaN;
+  this.$pendingValue = Number.NaN;
   this.$parsers = [];
   this.$formatters = [];
   this.$viewChangeListeners = [];
@@ -1679,6 +1682,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
   this.$valid = true;
   this.$invalid = false;
   this.$name = $attr.name;
+  this.$timeout = null;
 
   var ngModelGet = $parse($attr.ngModel),
       ngModelSet = ngModelGet.assign;
@@ -1818,7 +1822,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
    */
   this.$setViewValue = function(value) {
     this.$viewValue = value;
-
+    
     // change to dirty
     if (this.$pristine) {
       this.$dirty = true;
@@ -1849,10 +1853,11 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
   var ctrl = this;
 
   $scope.$watch(function ngModelWatch() {
-    var value = ngModelGet($scope);
+    var value = ngModelGet($scope),
+        force = ((ctrl.$timeout) && (ctrl.$pendingValue !== value));
 
     // if scope model value and ngModel value are out of sync
-    if (ctrl.$modelValue !== value) {
+    if ((ctrl.$modelValue !== value) || force) {
 
       var formatters = ctrl.$formatters,
           idx = formatters.length;
@@ -1862,7 +1867,7 @@ var NgModelController = ['$scope', '$exceptionHandler', '$attrs', '$element', '$
         value = formatters[idx](value);
       }
 
-      if (ctrl.$viewValue !== value) {
+      if ((ctrl.$viewValue !== value) || force) {
         ctrl.$viewValue = value;
         ctrl.$render();
       }
