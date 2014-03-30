@@ -181,6 +181,67 @@ This allows us to extend the above example with these features:
 
 
 
+# Non-immediate (debounced) or custom triggered model updates
+
+By default, any change on the content will trigger a model update and form validation. You can override this behavior using the `ng-model-options`
+directive to bind only to specified list of events. I.e. `ng-model-options="{ updateOn: "blur" }"` will update and validate only after the control loses
+focus. You can set a single event using an array instead of a string. I.e. `ng-model-options="{ updateOn: ["mousedown", "blur"] }"`
+
+If you want to keep the default behavior and just add new events that may trigger the model update
+and validation, add "default" as one of the specified events. I.e. `ng-model-options="{ updateOn: ["default", "blur"] }"`
+
+You can delay the model update/validation by writing a `debounce` key. I.e. `ng-model-options="{ debounce: 500 }"` will wait for half a second since
+the last content change before triggering the model update and form validation. This debouncing feature is not available on radio buttons.
+
+Custom debouncing timeouts can be set for each event for each event if you use an object in `debounce`.
+I.e. `ng-model-options="{ updateOn: ["default", "blur"], debounce: { default: 500, blur: 0 } }"`
+
+If those attributes are added to an element, they will be applied to all the child elements and controls that inherit from it unless they are
+overriden.
+
+The following example shows how to override immediate updates. Changes on the inputs within the form will update the model 
+only when the control loses focus (blur event).
+
+<example>
+  <file name="index.html">
+    <div ng-controller="ControllerUpdateOn">
+      <form name="form" class="css-form">
+        Name:
+        <input type="text" ng-model="username" ng-model-options="{ updateOn: "blur" }" name="uName" /><br />
+        Other data:
+        <input type="text" ng-model="userdata" name="uData" /><br />
+      </form>
+      <pre>username = "{{username}}"</pre>
+    </div>
+  </file>
+  <file name="script.js">
+    function ControllerUpdateOn($scope) {
+      $scope.username = "";
+    }
+  </file>
+</example>
+
+This one shows how to debounce model changes. Model will be updated only 250 milliseconds after last change.
+
+<example>
+  <file name="index.html">
+    <div ng-controller="ControllerUpdateOn">
+      <form name="form" class="css-form">
+        Name:
+        <input type="text" ng-model="username" name="uName" ng-model-options="{ debounce: 250 }" /><br />
+      </form>
+      <pre>username = "{{user.name}}"</pre>
+    </div>
+  </file>
+  <file name="script.js">
+    function ControllerUpdateOn($scope) {
+      $scope.username = "";
+    }
+  </file>
+</example>
+
+
+
 # Custom Validation
 
 Angular provides basic implementation for most common html5 {@link ng.directive:input input}
