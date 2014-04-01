@@ -620,7 +620,7 @@ describe('input', function() {
     });
 
 
-    it('should bind the element to a list of events on text inputs', function() {
+    it('should bind the element to a list of events', function() {
       compileInput('<input type="text" ng-model="name" name="alias" ng-model-options="{updateOn: [\'blur\', \'mousemove\']}" />');
 
       changeInputValueTo('a');

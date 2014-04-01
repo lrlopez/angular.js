@@ -2245,7 +2245,6 @@ var ngValueDirective = function() {
       var input = element(by.model('user.name'));
       var other = element(by.model('user.data'));
       it('should allow custom events', function() {
-        input.click();
         input.sendKeys(' hello');
         expect(model.getText()).toEqual('say');
         other.click();
@@ -2279,7 +2278,6 @@ var ngValueDirective = function() {
         // We need to tell Protractor not to wait for the debounce timeout to resolve
         browser.ignoreSynchronization = true;
         expect(model.getText()).toEqual('say');
-        input.click();
         input.sendKeys(' he');
         ptor.sleep(100);
         expect(model.getText()).toEqual('say');
