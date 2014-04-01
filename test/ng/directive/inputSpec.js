@@ -716,7 +716,7 @@ describe('input', function() {
 
     it('should trigger only after timeout in checkboxes', inject(function($timeout) {
       compileInput('<input type="checkbox" ng-model="checkbox" ng-model-options="{ debounce: 10000 }" />');
-      
+
       browserTrigger(inputElm, 'click');
       expect(scope.checkbox).toBe(undefined);
       $timeout.flush(2000);
@@ -745,7 +745,7 @@ describe('input', function() {
 
     it('should allow selecting different debounce timeouts for each event', inject(function($timeout) {
       compileInput('<input type="text" ng-model="name" name="alias" ng-model-options="{ updateOn: [\'default\', \'blur\'], debounce: {default: 10000, blur: 5000 } }" />');
-      
+
       changeInputValueTo('a');
       expect(scope.checkbox).toBe(undefined);
       $timeout.flush(6000);
@@ -763,7 +763,7 @@ describe('input', function() {
 
     it('should allow selecting different debounce timeouts for each event on checkboxes', inject(function($timeout) {
       compileInput('<input type="checkbox" ng-model="checkbox" ng-model-options="{ updateOn: [\'default\', \'blur\'], debounce: {default: 10000, blur: 5000 } }" />');
-      
+
       inputElm[0].checked = false;
       browserTrigger(inputElm, 'click');
       expect(scope.checkbox).toBe(undefined);
