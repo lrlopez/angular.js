@@ -2220,7 +2220,7 @@ var ngValueDirective = function() {
  *
  * @example
 
-  The following example shows how to override immediate updates. Changes on the inputs within the form will update the model 
+  The following example shows how to override immediate updates. Changes on the inputs within the form will update the model
   only when the control loses focus (blur event).
 
   <example name="ngModelOptions-directive-1">
@@ -2251,7 +2251,7 @@ var ngValueDirective = function() {
         other.click();
         expect(model.getText()).toEqual('say hello');
       });
-    </file>  
+    </file>
   </example>
 
   This one shows how to debounce model changes. Model will be updated only 500 milliseconds after last change.
@@ -2276,6 +2276,8 @@ var ngValueDirective = function() {
       var input = element(by.model('user.name'));
       var ptor = protractor.getInstance();
       it('should delay model update', function() {
+        // We need to tell Protractor not to wait for the debounce timeout to resolve
+        browser.ignoreSynchronization = true;
         expect(model.getText()).toEqual('say');
         input.click();
         input.sendKeys(' he');
@@ -2286,12 +2288,16 @@ var ngValueDirective = function() {
         ptor.sleep(600);
         expect(model.getText()).toEqual('say hello');
       });
-    </file>  
+      afterEach(function() {
+        // Don't forget to turn synchronization back on
+        browser.ignoreSynchronization = false;
+      });
+    </file>
   </example>
  */
 var ngModelOptionsDirective = function() {
   return {
-    controller: function($scope, $attrs) {
+    controller: ['$scope', '$attrs', function($scope, $attrs) {
       var that = this;
       this.$options = $scope.$eval($attrs.ngModelOptions);
       this.$eventList = [];
@@ -2313,6 +2319,6 @@ var ngModelOptionsDirective = function() {
       } else {
         this.$defaultEvents = true;
       }
-    }
+    }]
   };
 };
